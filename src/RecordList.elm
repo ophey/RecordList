@@ -177,8 +177,8 @@ view model =
 
     layout [] <|  
         row [] 
-            [ column [] 
-                [ row [padding 5, width fill] 
+        [ column [] 
+            [ row [padding 5, width fill] 
                 [ myTextInput 
                     "New Field Name"
                     model.newFieldName
@@ -211,80 +211,25 @@ view model =
                     ]
                     }
                 ]
-                ]
+            ]
             , column [width fill]
-                (List.append
+            (List.append
+                -- table header with field Names
                 [row [width fill]
                     (List.map (\fieldData ->
                         el headerStyle ( Element.text fieldData.fieldName ))
                         model.records)
                 ]
-                [ row [ width fill]
-                (List.indexedMap (\j fieldData ->
-                    column [ height fill
-                           , width fill]
-                    (List.indexedMap (\i value ->
-                        row (rowStyle i False)
-                            [ el [width fill, height fill]
-                                (Element.text value)
-                            ]
-                        )
+                -- row of value columns
+                [ row [Element.explain Debug.todo,  width fill]
+                (List.map (\fieldData ->
+                    -- value column for one field data value list
+                    column [height fill, width fill]
+                    (List.indexedMap 
+                        (\i value -> el (rowStyle i False) (Element.text value))
                         fieldData.values))
                     model.records)
-                ])
-{-
-            [ Element.indexedTable [ padding 10 ]
-                { data = model.records
-                , columns = List.map (\fieldDatum -> 
-                    let
-                        values = (Array.fromList fieldDatum.values)
-                    in
-                    { header = el headerStyle  ( Element.text fieldDatum.fieldName )
-                    , width = fill
-                    , view = (\i field -> 
-                                let
-                                    value = case (Array.get i values) of
-                                        Just str -> str
-                                        Nothing -> ""
-                                in
-                                el (rowStyle i False) 
-                                    (Element.text value))
-                    }) model.records
-                }
-            ]
--}    
+                ]
+            )
         ]
 
-{-           
-          [ Element.indexedTable [ padding 10 ]
-            { data = model.records
-            , columns = [
-                { header =
-
-                }
-            ]
-                List.indexedMap (\i r ->
-                    let
-                        field = (Array.get i (Array.fromList r.fields))
-                    in
-                    case field of
-                        Just f ->
-                            { header = 
-                                el headerStyle  
-                                    ( Element.text f.key)
-                            , width = fill
-                            , view =
-                                \idx record -> el []
-                                (Element.text f.value)
-                            }
-
-                        Nothing ->
-                            { header = Element.none 
-                            , width = fill
-                            , view = \idx record -> Element.none
-                            }
-                ) model.records
-            }
-
-    ]]]
-    -}
