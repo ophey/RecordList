@@ -39,11 +39,6 @@ type alias FieldData =
     , values: List String
     }
 
-type alias Record =
-    { fields: List Field 
-    , checked: Bool
-    }
-
 type alias Field =
     { key : String
     , value : String
@@ -52,19 +47,19 @@ type alias Field =
 initialModel : { fields : List { key : String, value : String }, records : List { fieldName : String, values : List String }, matchStr : String, newFieldName : String }
 initialModel =
     { fields = 
-        [ {- key = "Field 1" , value = "Value 01" }
+        [ { key = "Field 1" , value = "Value 01" }
         , { key = "Field 2" , value = "Value 02" }
         , { key = "Field 3" , value = "Value 03" }
-        , { key = "Field 4" , value = "Value 04" -}
+        , { key = "Field 4" , value = "Value 04" }
         ]
-    , records = [ {- fieldName = "Field 1"
+    , records = [ { fieldName = "Field 1"
                   , values = [ "Value 11", "Value 12" ] }
                 , { fieldName = "Field 2"
                   , values = [ "Value 21", "Value 22" ] }
                 , { fieldName = "Field 3"
                   , values = [ "Value 31", "Value 32" ] }
                 , { fieldName = "Field 4"
-                  , values = [ "Value 41", "Value 42" ] -}
+                  , values = [ "Value 41", "Value 42" ] }
                 ]
     , matchStr = ""
     , newFieldName = ""
@@ -169,10 +164,10 @@ rowStyle idx checked =
     , height fill
     , padding 5
     , Background.color (case (modBy 2 idx, checked) of
-        (1, True) ->  rgb255 120 150 150
-        (1, False) ->  rgb255 150 150 150
-        (0, True) -> rgb255 225 255 255
-        (0, False) -> rgb255 255 255 255
+        (1, True) ->  rgb255 170 200 200
+        (1, False) ->  rgb255 200 200 200
+        (0, True) -> rgb255 210 240 240
+        (0, False) -> rgb255 240 240 240
         _ -> rgb255 0 0 0)
     ]
 
