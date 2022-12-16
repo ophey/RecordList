@@ -247,7 +247,7 @@ view model =
                 ]    
                 , row [padding 3, width fill] 
                 [ Element.table [ padding 5 ]
-                    { data = model.records 
+                    { data = List.sortBy .position model.records 
                     , columns =
                     [ { header = el headerStyle  ( Element.text "Fields" )
                       , width = fill
@@ -273,7 +273,7 @@ view model =
                 [row [width fill]
                     (List.map (\fieldData ->
                         el headerStyle ( Element.text fieldData.fieldName ))
-                        model.records)
+                        (List.sortBy .position model.records))
                 ]
                 -- row of value columns
                 [ row [width fill]
@@ -283,7 +283,7 @@ view model =
                     (List.indexedMap 
                         (\i value -> el (rowStyle i False) (Element.text value))
                         fieldData.values))
-                    model.records)
+                    (List.sortBy .position model.records))
                 ]
             )
         ]
