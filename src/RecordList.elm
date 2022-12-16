@@ -71,6 +71,7 @@ initialModel =
 type Msg
     = AddFieldOfName String
     | FieldOfNameValue String String
+    | FieldOfNamePosition String String
     | AddRecord  
     | ToggleSelectRecord Int Bool
     | RemoveCheckedRecords
@@ -92,6 +93,34 @@ update msg model =
                                             r)
                                 model.records
             }
+        FieldOfNamePosition fieldName fieldPosition ->
+            let
+                newPos = Maybe.withDefault 0 (String.toInt fieldPosition)
+                currentPos = List.foldl (+) 0
+                    (List.map 
+                        (\r -> if r.fieldName == fieldName then r.position else 0)
+                        model.records)
+            in
+            if List.member newPos (List.range 1 (List.length model.records)) 
+                && newPos /= currentPos then
+            let
+                op = if currentPos < newPos then (-) else (+)
+                rnge = List.range (min currentPos newPos) (max currentPos newPos)
+            in
+            { model | records =
+                List.map (\r -> if r.fieldName == fieldName then
+                                     { r | position = newPos }
+                                else
+                                    { r | position = 
+                                        if List.member r.position rnge  then
+                                            op r.position 1
+                                        else
+                                            r.position } 
+                                    )
+                                model.records
+            }
+            else
+                model
         AddRecord ->
             { model | records = addFieldValues model.records }
         ToggleSelectRecord idx checked ->
@@ -137,12 +166,23 @@ headerStyle = [ padding 5
 myTextInput : String -> String -> (String -> msg) -> Element msg
 myTextInput labelStr ref onChangeMsg =
     Input.text 
-        [ width (fillPortion 10) ] 
+        [ width (fillPortion 4) ] 
         { label = Input.labelBelow 
             [Font.size 15] 
             (text labelStr)
         , onChange = always onChangeMsg text
         , text = ref 
+        , placeholder = Nothing
+        }
+
+myIntInput labelStr ref onChangeMsg =
+    Input.text 
+        [ width (fillPortion 2) ] 
+        { label = Input.labelBelow 
+            [Font.size 15] 
+            (text labelStr)
+        , onChange = always onChangeMsg text
+        , text = String.fromInt ref 
         , placeholder = Nothing
         }
 
@@ -188,7 +228,7 @@ view model =
     layout [] <|  
         row [] 
         [ column [] 
-            [ row [padding 5, width fill] 
+            [ row [padding 3, width fill] 
                 [ myTextInput 
                     "New Field Name"
                     model.newFieldName
@@ -205,15 +245,18 @@ view model =
                     "Add Data to Table"
                     (Just AddRecord)
                 ]    
-                , row [padding 5, width fill] 
-                [ Element.table [ padding 10 ]
+                , row [padding 3, width fill] 
+                [ Element.table [ padding 5 ]
                     { data = model.records 
                     , columns =
                     [ { header = el headerStyle  ( Element.text "Fields" )
                       , width = fill
                       , view =
                       \record -> 
-                          row [] [ el [] ( Element.text (String.fromInt record.position))
+                          row [] [ myIntInput 
+                                    "pos"
+                                    record.position
+                                    (FieldOfNamePosition record.fieldName) 
                                  , myTextInput 
                                     record.fieldName
                                     record.newValue
