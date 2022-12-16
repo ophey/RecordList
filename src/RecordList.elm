@@ -28,37 +28,31 @@ main =
 --
 
 type alias Model =
-    { fields: List Field 
-    , records: List FieldData
+    { records: List FieldData
     , matchStr: String
     , newFieldName: String
     }
 
 type alias FieldData =
     { fieldName: String
+    , newValue: String
     , values: List String
     }
 
-type alias Field =
-    { key : String
-    , value : String
-    }
 
-initialModel : { fields : List { key : String, value : String }, records : List { fieldName : String, values : List String }, matchStr : String, newFieldName : String }
+initialModel : Model
 initialModel =
-    { fields = 
-        [ { key = "Field 1" , value = "Value 01" }
-        , { key = "Field 2" , value = "Value 02" }
-        , { key = "Field 3" , value = "Value 03" }
-        , { key = "Field 4" , value = "Value 04" }
-        ]
-    , records = [ { fieldName = "Field 1"
+    { records = [ { fieldName = "Field 1"
+                  , newValue = "Value 01"
                   , values = [ "Value 11", "Value 12" ] }
                 , { fieldName = "Field 2"
+                  , newValue = "Value 02"
                   , values = [ "Value 21", "Value 22" ] }
                 , { fieldName = "Field 3"
+                  , newValue = "Value 03"
                   , values = [ "Value 31", "Value 32" ] }
                 , { fieldName = "Field 4"
+                  , newValue = "Value 04"
                   , values = [ "Value 41", "Value 42" ] }
                 ]
     , matchStr = ""
@@ -82,18 +76,17 @@ update : Msg -> Model -> Model
 update msg model =
     case msg of 
         AddFieldOfName fieldName ->
-            { model | fields = { key = fieldName, value = "" } :: model.fields
-                    , records = addFieldDataForName fieldName model.records }
+            { model | records = addFieldDataForName fieldName model.records }
         FieldOfNameValue fieldName fieldValue ->
-            { model | fields = 
-                        List.map (\f -> if f.key == fieldName then
-                                            { f | value = fieldValue }
+            { model | records = 
+                        List.map (\r -> if r.fieldName == fieldName then
+                                            { r | newValue = fieldValue }
                                         else
-                                            f)
-                                model.fields
+                                            r)
+                                model.records
             }
         AddRecord ->
-            { model | records = addFieldValues model.fields model.records }
+            { model | records = addFieldValues model.records }
         ToggleSelectRecord idx checked ->
             model
         RemoveCheckedRecords ->
@@ -107,13 +100,21 @@ addFieldDataForName : String -> List FieldData -> List FieldData
 addFieldDataForName name fieldData =
     let
         newFieldData = case fieldData of
-            [] -> { fieldName = name, values = [] } 
-            first :: rest -> { fieldName = name, values = List.repeat (List.length (.values first)) "" }   
+            [] -> 
+                { fieldName = name
+                , newValue = ""
+                , values = [] } 
+            
+            first :: rest -> 
+                { fieldName = name
+                , newValue = ""
+                , values = List.repeat (List.length (.values first)) "" }   
     in
       newFieldData :: fieldData
 
-addFieldValues fields records =
-    List.map2 (\field data -> { data | values = field.value :: data.values }) fields records
+addFieldValues records =
+    List.map (\record -> { record | values = record.newValue :: record.values }) records
+
 --
 -- VIEW
 --
@@ -197,16 +198,16 @@ view model =
                 ]    
                 , row [padding 5, width fill] 
                 [ Element.table [ padding 10 ]
-                    { data = model.fields 
+                    { data = model.records 
                     , columns =
                     [ { header = el headerStyle  ( Element.text "Fields" )
                       , width = fill
                       , view =
-                      \field -> 
+                      \record -> 
                           myTextInput 
-                              field.key
-                              field.value
-                              (FieldOfNameValue field.key)
+                              record.fieldName
+                              record.newValue
+                              (FieldOfNameValue record.fieldName)
                       }
                     ]
                     }
