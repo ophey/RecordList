@@ -73,6 +73,7 @@ type Msg
     | FieldOfNameValue String String
     | FieldOfNamePosition String String
     | AddRecord  
+    | ClearData
     | ToggleSelectRecord Int Bool
     | RemoveCheckedRecords
     | Match String
@@ -128,6 +129,9 @@ update msg model =
                 model
         AddRecord ->
             { model | records = addFieldValues model.records }
+        ClearData ->
+            { model | records = 
+                List.map (\r -> { r | newValue = ""}) model.records }
         ToggleSelectRecord idx checked ->
             model
         RemoveCheckedRecords ->
@@ -182,7 +186,7 @@ myTextInput labelStr ref onChangeMsg =
 
 myIntInput labelStr ref onChangeMsg =
     Input.text 
-        [ width (fillPortion 2) ] 
+        [ width (fillPortion 1) ] 
         { label = Input.labelBelow 
             [Font.size 15] 
             (text labelStr)
@@ -191,23 +195,21 @@ myIntInput labelStr ref onChangeMsg =
         , placeholder = Nothing
         }
 
-buttonStyle : String -> List (Attr () msg)
-buttonStyle tip =
+buttonStyle tip tipPos =
     [ Background.color (Element.rgb255 150 150 238)
     , mouseDown
         [ Background.color (Element.rgb255 167 167 255) ]
     , focused [ ]
     , centerX
-    , tooltip above (myTooltip tip)
+    , tooltip tipPos (myTooltip tip)
     , padding 5
     , Border.rounded 5
     , width (fillPortion 1)
     ]
 
-myButton : String -> String -> Maybe msg -> Element msg
-myButton labelStr tipStr onPressMsg =
+myButton labelStr tipStr tipPos onPressMsg =
     Input.button 
-        (buttonStyle tipStr)
+        (buttonStyle tipStr tipPos)
         { onPress = onPressMsg
         , label = el [centerX] (text labelStr)
         }
@@ -232,8 +234,22 @@ view model =
 
     layout [] <|  
         row [] 
-        [ column [] 
-            [ row [padding 3, width fill] 
+        [ column [alignTop] 
+            [ row [padding 5, width fill] 
+                [ myButton 
+                    "CLR" 
+                    "Clear Data"
+                    onRight
+                    (Just ClearData)
+                ]
+            , row [padding 5, width fill] 
+                [ myButton 
+                    "+" 
+                    "Add Data to Table"
+                    onRight
+                    (Just AddRecord)
+                ]
+            , row [padding 3, width fill] 
                 [ myTextInput 
                     "New Field Name"
                     model.newFieldName
@@ -241,24 +257,19 @@ view model =
                 , myButton 
                     "+" 
                     "Add New Field to Records"
+                    onRight
                     (Just (AddFieldOfName  
                             model.newFieldName))
                 ]
-                , row [padding 5, width fill] 
-                [ myButton 
-                    "+" 
-                    "Add Data to Table"
-                    (Just AddRecord)
-                ]    
-                , row [padding 3, width fill] 
-                [ Element.table [ padding 5 ]
-                    { data = List.sortBy .position model.records 
-                    , columns =
-                    [ { header = el headerStyle  ( Element.text "Fields" )
-                      , width = fill
-                      , view =
-                      \record -> 
-                          row [] [ myIntInput 
+    
+            ]
+        , column [padding 3, width fill]
+            (List.concat
+                -- Data entry for fields
+                [[ row [width fill]
+                    (List.map (\record ->
+                        row [width fill]
+                            [ myIntInput 
                                     "pos"
                                     record.position
                                     (FieldOfNamePosition record.fieldName) 
@@ -266,22 +277,18 @@ view model =
                                     record.fieldName
                                     record.newValue
                                     (FieldOfNameValue record.fieldName) 
-                                 ]
-                      }
-                    ]
-                    }
+                            ] 
+                        )
+                        (List.sortBy .position model.records))
                 ]
-            ]
-            , column [width fill]
-            (List.append
                 -- table header with field Names
-                [row [width fill]
+                ,[row [width fill]
                     (List.map (\fieldData ->
                         el headerStyle ( Element.text fieldData.fieldName ))
                         (List.sortBy .position model.records))
                 ]
                 -- row of value columns
-                [ row [width fill]
+                ,[ row [width fill]
                 (List.map (\fieldData ->
                     -- value column for one field data value list
                     column [height fill, width fill]
@@ -289,7 +296,7 @@ view model =
                         (\i value -> el (rowStyle i False) (Element.text value))
                         fieldData.values))
                     (List.sortBy .position model.records))
-                ]
+                ]]
             )
         ]
 
