@@ -36,6 +36,7 @@ type alias Model =
 type alias FieldData =
     { fieldName: String
     , newValue: String
+    , position: Int
     , values: List String
     }
 
@@ -44,15 +45,19 @@ initialModel : Model
 initialModel =
     { records = [ { fieldName = "Field 1"
                   , newValue = "Value 01"
+                  , position = 1
                   , values = [ "Value 11", "Value 12" ] }
                 , { fieldName = "Field 2"
                   , newValue = "Value 02"
+                  , position = 2
                   , values = [ "Value 21", "Value 22" ] }
                 , { fieldName = "Field 3"
                   , newValue = "Value 03"
+                  , position = 3
                   , values = [ "Value 31", "Value 32" ] }
                 , { fieldName = "Field 4"
                   , newValue = "Value 04"
+                  , position = 4
                   , values = [ "Value 41", "Value 42" ] }
                 ]
     , matchStr = ""
@@ -76,7 +81,9 @@ update : Msg -> Model -> Model
 update msg model =
     case msg of 
         AddFieldOfName fieldName ->
-            { model | records = addFieldDataForName fieldName model.records }
+            { model | records = 
+                    List.map (\record -> { record | position = record.position + 1 })
+                        (addFieldDataForName fieldName model.records) }
         FieldOfNameValue fieldName fieldValue ->
             { model | records = 
                         List.map (\r -> if r.fieldName == fieldName then
@@ -103,17 +110,19 @@ addFieldDataForName name fieldData =
             [] -> 
                 { fieldName = name
                 , newValue = ""
+                , position = 0
                 , values = [] } 
             
             first :: rest -> 
                 { fieldName = name
                 , newValue = ""
+                , position = 0
                 , values = List.repeat (List.length (.values first)) "" }   
     in
       newFieldData :: fieldData
 
 addFieldValues records =
-    List.map (\record -> { record | values = record.newValue :: record.values }) records
+    (List.map (\record -> { record | values = record.newValue :: record.values }) records)
 
 --
 -- VIEW
@@ -204,10 +213,12 @@ view model =
                       , width = fill
                       , view =
                       \record -> 
-                          myTextInput 
-                              record.fieldName
-                              record.newValue
-                              (FieldOfNameValue record.fieldName)
+                          row [] [ el [] ( Element.text (String.fromInt record.position))
+                                 , myTextInput 
+                                    record.fieldName
+                                    record.newValue
+                                    (FieldOfNameValue record.fieldName) 
+                                 ]
                       }
                     ]
                     }
@@ -222,7 +233,7 @@ view model =
                         model.records)
                 ]
                 -- row of value columns
-                [ row [Element.explain Debug.todo,  width fill]
+                [ row [width fill]
                 (List.map (\fieldData ->
                     -- value column for one field data value list
                     column [height fill, width fill]
