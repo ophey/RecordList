@@ -93,6 +93,11 @@ update msg model =
                                             r)
                                 model.records
             }
+        
+        {- change position of field of given fieldName 
+        to given fieldPostion (must be Int in  [1 .. records.length])
+        and  move other fields accordingly to stay in the range of [1 .. records.length] 
+        -}
         FieldOfNamePosition fieldName fieldPosition ->
             let
                 newPos = Maybe.withDefault 0 (String.toInt fieldPosition)
