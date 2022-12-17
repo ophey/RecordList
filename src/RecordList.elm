@@ -113,8 +113,8 @@ update msg model =
                 op = if currentPos < newPos then (-) else (+)
                 rnge = List.range (min currentPos newPos) (max currentPos newPos)
             in
-            { model | records =
-                List.map (\r -> if r.fieldName == fieldName then
+            { model | records = List.sortBy .position 
+                (List.map (\r -> if r.fieldName == fieldName then
                                      { r | position = newPos }
                                 else
                                     { r | position = 
@@ -123,7 +123,7 @@ update msg model =
                                         else
                                             r.position } 
                                     )
-                                model.records
+                                model.records)
             }
             else
                 model
@@ -279,13 +279,13 @@ view model =
                                     (FieldOfNameValue record.fieldName) 
                             ] 
                         )
-                        (List.sortBy .position model.records))
+                        model.records)
                 ]
                 -- table header with field Names
                 ,[row [width fill]
                     (List.map (\fieldData ->
                         el headerStyle ( Element.text fieldData.fieldName ))
-                        (List.sortBy .position model.records))
+                        model.records)
                 ]
                 -- row of value columns
                 ,[ row [width fill]
@@ -295,7 +295,7 @@ view model =
                     (List.indexedMap 
                         (\i value -> el (rowStyle i False) (Element.text value))
                         fieldData.values))
-                    (List.sortBy .position model.records))
+                    model.records)
                 ]]
             )
         ]
