@@ -10,9 +10,9 @@ import Html exposing (Html)
 import Html.Attributes exposing (hidden)
 
 import Tooltip exposing (..)
---import Array
 import Html exposing (col)
-import Array
+import Char exposing (isHexDigit)
+import Html.Attributes exposing (value)
 
 
 main : Program () Model Msg
@@ -46,19 +46,19 @@ initialModel =
     { records = [ { fieldName = "Field 1"
                   , newValue = "Value 01"
                   , position = 1
-                  , values = [ "Value 11", "Value 12" ] }
+                  , values = [ "Rest 01", "Quest 01", "Test 01", "Value 11", "Value 12" ] }
                 , { fieldName = "Field 2"
                   , newValue = "Value 02"
                   , position = 2
-                  , values = [ "Value 21", "Value 22" ] }
+                  , values = [ "Rest 02", "Quest 02", "Test 02", "Value 21", "Value 22" ] }
                 , { fieldName = "Field 3"
                   , newValue = "Value 03"
                   , position = 3
-                  , values = [ "Value 31", "Value 32" ] }
+                  , values = [ "Rest 03", "Quest 03", "Test 03", "Value 31", "Value 32" ] }
                 , { fieldName = "Field 4"
                   , newValue = "Value 04"
                   , position = 4
-                  , values = [ "Value 41", "Value 42" ] }
+                  , values = [ "Rest 03", "Quest 03", "Test 03", "Value 41", "Value 42" ] }
                 ]
     , matchStr = ""
     , newFieldName = ""
@@ -136,8 +136,8 @@ update msg model =
             model
         RemoveCheckedRecords ->
             model
-        Match matchStr ->
-            model
+        Match str ->
+            { model | matchStr = str }
         NewFieldName str ->
             { model | newFieldName = str }
 
@@ -229,9 +229,28 @@ rowStyle idx checked =
     ]
 
 
+combineRows records =
+    case List.head records of
+        Nothing -> []
+        Just r ->
+            List.foldr (\v1 v2 ->
+                            List.map2 (++) v1 v2)
+                (List.repeat (List.length (.values r) ) "")
+                (List.map .values records)
+
 view : Model -> Html Msg
 view model =
+    let 
+        matchIndices = List.indexedMap 
+                            (\idx row -> 
+                                if (String.contains model.matchStr row) then
+                                    idx
+                                else
+                                    -1
+                            )
+                            (combineRows model.records)
 
+    in
     layout [] <|  
         row [] 
         [ column [alignTop] 
@@ -281,6 +300,13 @@ view model =
                         )
                         model.records)
                 ]
+                , [row 
+                     [ padding 10, width fill ]
+                    [ myTextInput 
+                        "Search"
+                        model.matchStr
+                        Match 
+                    ]]
                 -- table header with field Names
                 ,[row [width fill]
                     (List.map (\fieldData ->
@@ -293,9 +319,15 @@ view model =
                     -- value column for one field data value list
                     column [height fill, width fill]
                     (List.indexedMap 
-                        (\i value -> el (rowStyle i False) (Element.text value))
-                        fieldData.values))
-                    model.records)
+                        (\i value -> 
+                            el (rowStyle i False) (Element.text value))
+                        (List.concat (List.indexedMap 
+                            (\i value -> 
+                                if List.member i matchIndices then 
+                                    [value] 
+                                else [] )                     
+                                fieldData.values))))
+                        model.records)
                 ]]
             )
         ]
