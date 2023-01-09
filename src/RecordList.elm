@@ -102,9 +102,13 @@ update msg model =
         FieldOfNamePosition fieldName fieldPosition ->
             let
                 newPos = Maybe.withDefault 0 (String.toInt fieldPosition)
-                currentPos = List.foldl (+) 0
+                currentPos = List.sum
                     (List.map 
-                        (\r -> if r.fieldName == fieldName then r.position else 0)
+                        (\r -> 
+                            if r.fieldName == fieldName then 
+                                r.position 
+                            else 
+                                0)
                         model.records)
             in
             if List.member newPos (List.range 1 (List.length model.records)) 
