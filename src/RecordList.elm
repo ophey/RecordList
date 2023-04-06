@@ -233,18 +233,20 @@ rowStyle idx checked =
     ]
 
 
-combineRows records =
-    case List.head records of
-        Nothing -> []
-        Just r ->
-            List.foldr (\v1 v2 ->
-                            List.map2 (++) v1 v2)
-                (List.repeat (List.length (.values r) ) "")
-                (List.map .values records)
-
 view : Model -> Html Msg
 view model =
     let 
+        -- merge the field values of each record row into a single string for easy search
+        combineRows records =
+            case List.head records of
+                Nothing -> []
+                Just r ->
+                    List.foldr (\v1 v2 ->
+                                    List.map2 (++) v1 v2)
+                        (List.repeat (List.length (.values r) ) "")
+                        (List.map .values records)
+
+        -- list of row numbers matching the search string (model.matchStr)
         matchIndices = List.indexedMap 
                             (\idx row -> 
                                 if (String.contains model.matchStr row) then
@@ -319,19 +321,23 @@ view model =
                 ]
                 -- row of value columns
                 ,[ row [width fill]
-                (List.map (\fieldData ->
+                (List.map 
+                    (\fieldData ->
                     -- value column for one field data value list
                     column [height fill, width fill]
                     (List.indexedMap 
+                        -- create a text element ...
                         (\i value -> 
                             el (rowStyle i False) (Element.text value))
+                        -- ... for each field of each record with 
+                        --     an index in the precomputed list matchIndices 
                         (List.concat (List.indexedMap 
                             (\i value -> 
                                 if List.member i matchIndices then 
                                     [value] 
                                 else [] )                     
                                 fieldData.values))))
-                        model.records)
+                    model.records)
                 ]]
             )
         ]
